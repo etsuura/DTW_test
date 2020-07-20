@@ -23,7 +23,7 @@ def change_size(mcep1, mcep2):
     mcep2 = np.pad(mcep2, ((0, 0), (0, m - mcep2.shape[-1])), mode='edge')
     return mcep1, mcep2
 
-def plot_mel(m, name, T=False):
+def plot_para(m, name, T=False):
     idx = 0
     plt.figure(figsize=(16, 8))
     if T:
@@ -90,20 +90,34 @@ def alignment(X, Y, param1, param2):
     return param1_a, param2_a
 
 def alignment_param(path1, path2, name1, name2):
+    # classにする？
     fo1, sp1, ap1 = spt.path2param(path1)
     fo2, sp2, ap2 = spt.path2param(path2)
     mcp1 = spt.sp2mc(sp1)
     mcp2 = spt.sp2mc(sp2)
     mcp1, mcp2 = change_size(mcp1, mcp2)
 
+    _, fs = spt.read_data(path1)
+    bap1 = spt.ap2bap(ap1, fs)
+    bap2 = spt.ap2bap(ap2, fs)
+    bap1, bap2 = change_size(bap1, bap2)
+
     X, Y = mcp1.T[None], mcp2.T[None]
-    mcp1_alig, mcp2_alig = alignment(X, Y, mcp1, mcp2)
 
-    plot_mel(mcp1, "mcp1")
-    plot_mel(mcp2, "mcp2")
+    # mcp1_alig, mcp2_alig = alignment(X, Y, mcp1, mcp2)
+    # plot_para(mcp1, "mcp1")
+    # plot_para(mcp2, "mcp2")
+    # plot_para(mcp1_alig, "mcp1_alig")
+    # plot_para(mcp2_alig, "mcp2_alig")
 
-    plot_mel(mcp1_alig, "mcp1_alig")
-    plot_mel(mcp2_alig, "mcp2_alig")
+    # bap1_alig, bap2_alig = alignment(X, Y, bap1, bap2)
+    # plot_para(bap1, "bap1")
+    # plot_para(bap2, "bap2")
+    # plot_para(bap1_alig, "bap1_alig")
+    # plot_para(bap2_alig, "bap2_alig")
+
+    fo1, fo2 = fo1
+
 
     pass
 

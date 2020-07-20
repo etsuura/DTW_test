@@ -47,3 +47,7 @@ def sp2mc(sp, order=39, alpha=0.41):   # alpha is all-pass constant
     fftlen = (len(sp) - 1) * 2
     mcep = conversion.sp2mc(sp, order, alpha)
     return mcep
+
+def ap2bap(ap, fs):
+    bap = pw.code_aperiodicity(ap, fs)
+    return bap
