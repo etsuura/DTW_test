@@ -13,15 +13,16 @@ from fastdtw import fastdtw
 
 import matplotlib.pyplot as plt
 from IPython.display import Audio
+import utils.PlotFigure as plot
 import utils.SignalProcessingTools as spt
 
-def change_size(mcep1, mcep2):
-    mcep1, mcep2 = mcep1.T, mcep2.T
+def change_size(param1, param2):
+    param1, param2 = param1.T, param2.T
 
-    m = max(mcep1.shape[-1], mcep2.shape[-1])
-    mcep1 = np.pad(mcep1, ((0, 0), (0, m - mcep1.shape[-1])), mode='edge')
-    mcep2 = np.pad(mcep2, ((0, 0), (0, m - mcep2.shape[-1])), mode='edge')
-    return mcep1, mcep2
+    m = max(param1.shape[-1], param2.shape[-1])
+    param1 = np.pad(param1, ((0, 0), (0, m - param1.shape[-1])), mode='edge')
+    param2 = np.pad(param2, ((0, 0), (0, m - param2.shape[-1])), mode='edge')
+    return param1, param2
 
 def plot_para(m, name, T=False):
     idx = 0
@@ -116,8 +117,16 @@ def alignment_param(path1, path2, name1, name2):
     # plot_para(bap1_alig, "bap1_alig")
     # plot_para(bap2_alig, "bap2_alig")
 
-    fo1, fo2 = fo1
+    # fo1, fo2 = fo1.T[None], fo2.T[None] #foのshape調整
+    fo1_dtw = fo1[:, np.newaxis]
+    fo2_dtw = fo2[:, np.newaxis]
+    fo1_dtw, fo2_dtw = change_size(fo1_dtw, fo2_dtw)
+    fo1_alig, fo2_alig = alignment(X, Y, fo1_dtw, fo2_dtw)
 
+    plot.plot_1figure(fo1, "fo1", "fo1")
+    plot.plot_1figure(fo2, "fo2", "fo2")
+    plot.plot_1figure(fo1_alig, "fo1_alig", "fo1_alig")
+    plot.plot_1figure(fo2_alig, "fo2_alig", "fo2_alig")
 
     pass
 
