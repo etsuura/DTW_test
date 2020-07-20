@@ -41,13 +41,21 @@ def synthesize(fo, sp, ap, fs):
 
 def synthesize_write(filename, fo, sp, ap, fs):
     synth_voice = synthesize(fo, sp, ap, fs)
-    wavfile.write(filename, fs, synth_voice)
+    wavfile.write(filename + ".wav", fs, synth_voice)
 
 def sp2mc(sp, order=39, alpha=0.41):   # alpha is all-pass constant
     fftlen = (len(sp) - 1) * 2
     mcep = conversion.sp2mc(sp, order, alpha)
-    return mcep
+    return mcep, fftlen
+
+def mc2sp(mc, fftlen, alpha=0.41):
+    sp = conversion.mc2sp(mc, alpha, fftlen)
+    return sp
 
 def ap2bap(ap, fs):
     bap = pw.code_aperiodicity(ap, fs)
     return bap
+
+def bap2ap(bap, fs, fftlen):
+    ap = pw.decode_aperiodicity(bap, fs, fftlen)
+    return ap

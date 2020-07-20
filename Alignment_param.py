@@ -24,6 +24,7 @@ def change_size(param1, param2):
     param2 = np.pad(param2, ((0, 0), (0, m - param2.shape[-1])), mode='edge')
     return param1, param2
 
+# Todo 転置の必要性の確認
 def plot_para(m, name, T=False):
     idx = 0
     plt.figure(figsize=(16, 8))
@@ -87,46 +88,65 @@ def alignment(X, Y, param1, param2):
     param1_a, param2_a = DTWAligner(verbose=0, dist=melcd).transform((X, Y), (param1.T[None], param2.T[None]))
     param1_a = np.squeeze(param1_a)
     param2_a = np.squeeze(param2_a)
-    param1_a, param2_a = param1_a.T, param2_a.T
+
+    # 転置なし　元のshapeと同じ
+    # Todo plotの修正
+    # param1_a, param2_a = param1_a.T, param2_a.T
+
+    #cython用
+    param1_a = param1_a.copy(order="c")
+    param2_a = param2_a.copy(order="c")
     return param1_a, param2_a
 
 def alignment_param(path1, path2, name1, name2):
     # classにする？
+    _, fs = spt.read_data(path1)
     fo1, sp1, ap1 = spt.path2param(path1)
     fo2, sp2, ap2 = spt.path2param(path2)
-    mcp1 = spt.sp2mc(sp1)
-    mcp2 = spt.sp2mc(sp2)
-    mcp1, mcp2 = change_size(mcp1, mcp2)
 
-    _, fs = spt.read_data(path1)
+    # spt.synthesize_write("NV_synth", fo1, sp1, ap1, fs)
+    # spt.synthesize_write("EL_synth", fo2, sp2, ap2, fs)
+
+    mcp1, fftlen = spt.sp2mc(sp1)
+    mcp2, _ = spt.sp2mc(sp2)
+    mcp1, mcp2 = change_size(mcp1, mcp2)    # 注意 転置
+
     bap1 = spt.ap2bap(ap1, fs)
     bap2 = spt.ap2bap(ap2, fs)
     bap1, bap2 = change_size(bap1, bap2)
 
-    X, Y = mcp1.T[None], mcp2.T[None]
+    X, Y = mcp1.T[None], mcp2.T[None]   # 元のmcep
 
-    # mcp1_alig, mcp2_alig = alignment(X, Y, mcp1, mcp2)
+    mcp1_alig, mcp2_alig = alignment(X, Y, mcp1, mcp2)
     # plot_para(mcp1, "mcp1")
     # plot_para(mcp2, "mcp2")
     # plot_para(mcp1_alig, "mcp1_alig")
     # plot_para(mcp2_alig, "mcp2_alig")
 
-    # bap1_alig, bap2_alig = alignment(X, Y, bap1, bap2)
+    bap1_alig, bap2_alig = alignment(X, Y, bap1, bap2)
     # plot_para(bap1, "bap1")
     # plot_para(bap2, "bap2")
     # plot_para(bap1_alig, "bap1_alig")
     # plot_para(bap2_alig, "bap2_alig")
 
-    # fo1, fo2 = fo1.T[None], fo2.T[None] #foのshape調整
     fo1_dtw = fo1[:, np.newaxis]
     fo2_dtw = fo2[:, np.newaxis]
     fo1_dtw, fo2_dtw = change_size(fo1_dtw, fo2_dtw)
     fo1_alig, fo2_alig = alignment(X, Y, fo1_dtw, fo2_dtw)
 
-    plot.plot_1figure(fo1, "fo1", "fo1")
-    plot.plot_1figure(fo2, "fo2", "fo2")
-    plot.plot_1figure(fo1_alig, "fo1_alig", "fo1_alig")
-    plot.plot_1figure(fo2_alig, "fo2_alig", "fo2_alig")
+    # plot.plot_1figure(fo1, "fo1", "fo1")
+    # plot.plot_1figure(fo2, "fo2", "fo2")
+    # plot.plot_1figure(fo1_alig, "fo1_alig", "fo1_alig")
+    # plot.plot_1figure(fo2_alig, "fo2_alig", "fo2_alig")
+
+    sp1_alig = spt.mc2sp(mcp1_alig, fftlen)
+    sp2_alig = spt.mc2sp(mcp2_alig, fftlen)
+    ap1_alig = spt.bap2ap(bap1_alig, fs, fftlen)
+    ap2_alig = spt.bap2ap(bap2_alig, fs, fftlen)
+
+    spt.synthesize_write("NV_alig_synth", fo1_alig, sp1_alig, ap1_alig, fs)
+    spt.synthesize_write("EL_alig_synth", fo2_alig, sp2_alig, ap2_alig, fs)
+
 
     pass
 
@@ -138,7 +158,7 @@ def main():
     EU_PATH = "./Data/Audio/seou_eu.wav"
 
     # alignment_param(FILEPATH1, FILEPATH2, "EL_alig", "NV_alig")
-    alignment_param(NV_PATH, EL_PATH, "EL_alig", "NV_alig")
+    alignment_param(NV_PATH, EL_PATH, "NV_alig", "EL_alig")
 
     pass
 
